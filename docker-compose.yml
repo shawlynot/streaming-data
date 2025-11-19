@@ -1,0 +1,20 @@
+---
+
+services:
+
+  db:
+    image: postgres:18
+    container_name: db
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: admin
+      POSTGRES_DB: streamming_data
+    ports:
+      - "5432:5432"
+    volumes:
+      - db:/var/lib/postgresql/data
+
+volumes:
+  db:
+    driver: local

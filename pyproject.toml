@@ -6,9 +6,9 @@ readme = "README.md"
 authors = [
     { name = "shawlynot", email = "88781957+shawlynot@users.noreply.github.com" }
 ]
-requires-python = ">=3.13"
+requires-python = ">=3.14"
 dependencies = [
-    "databricks-sql-connector>=4.0.5",
+    "python-binance"
 ]
 
 [project.scripts]
