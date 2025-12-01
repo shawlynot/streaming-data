@@ -1,7 +1,7 @@
-from streaming_data.ingest.binance_client import main
+from streaming_data.ingest.kracken_client import kraken_ws_client
 
 import asyncio
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(kraken_ws_client())
