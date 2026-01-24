@@ -1,0 +1,21 @@
+tls:
+  certificates:
+    - certFile: "/etc/certs/fullchain.cer"
+      keyFile: "/etc/certs/{{ cert.domain }}.key"
+  stores:
+    default:
+      defaultCertificate:
+        certFile: "/etc/certs/fullchain.cer"
+        keyFile: "/etc/certs/{{ cert.domain }}.key"
+
+http:
+  services:
+    backend:
+      loadBalancer:
+        servers:
+        - url: "http://backend:80"
+  routers:
+    backend:
+      tls: {}
+      rule: "PathPrefix(`/api`)"
+      service: backend

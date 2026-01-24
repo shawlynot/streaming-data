@@ -10,14 +10,16 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}/src/streaming_data",
+            "cwd": "${workspaceFolder}/app/src/streaming_data",
+            "envFile": "${workspaceFolder}/app/src/.env"
         },
         {
             "name": "Python Debugger: Module",
             "type": "debugpy",
             "request": "launch",
             "module": "streaming_data.test",
-            "envFile": "${workspaceFolder}/.env"
+            "cwd": "${workspaceFolder}/app/src/streaming_data",
+            "envFile": "${workspaceFolder}/app/src/.env"
         }
     ]
 }

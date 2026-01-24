@@ -1,7 +1,9 @@
 import json
 import websockets
+from ...db.util import db_client
 
-KRAKEN_WS_URL = "wss://ws.kraken.com/v2"   # v2 public market data
+KRAKEN_WS_URL = "wss://ws.kraken.com/v2"  # v2 public market data
+
 
 async def kraken_ws_client():
     async with websockets.connect(KRAKEN_WS_URL) as ws:
@@ -11,8 +13,8 @@ async def kraken_ws_client():
             "method": "subscribe",
             "params": {
                 "channel": "ticker",
-                "symbol": ["BTC/USD"]  # you can add more pairs
-            }
+                "symbol": ["BTC/USD"],  # you can add more pairs
+            },
         }
 
         await ws.send(json.dumps(subscribe_msg))
@@ -22,5 +24,6 @@ async def kraken_ws_client():
         while True:
             msg = await ws.recv()
             data = json.loads(msg)
+
             print(data)
-            # TODO: stick it in a DB
+            

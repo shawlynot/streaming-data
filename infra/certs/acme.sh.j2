@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -e
+
+cd /tmp
+git clone --depth 1 https://github.com/acmesh-official/acme.sh.git
+cd acme.sh
+./acme.sh --install  \
+    --home {{ acme_home }} \
+    --config-home {{ acme_home }}/config
+
+rm -rf /tmp/acme.sh
+
+{{ acme_home }}/acme.sh  --register-account  --server zerossl \
+        --eab-kid  {{ cert.ZS_KID }}  \
+        --eab-hmac-key  {{ cert.ZS_HMAC }} \
+        --config-home {{ acme_home }}/config
+
+{{ acme_home }}/acme.sh --config-home {{ acme_home }}/config --set-default-ca  --server zerossl
