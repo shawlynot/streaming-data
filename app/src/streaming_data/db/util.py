@@ -17,4 +17,4 @@ class DBClient:
         return self.pool.connection()
 
 
-db_client = DBClient(password=os.environ["POSTGRES_PASSWORD"])
+DB_CLIENT = DBClient(password=os.environ["POSTGRES_PASSWORD"])

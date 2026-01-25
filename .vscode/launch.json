@@ -5,13 +5,31 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python Debugger: Live Ingest",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/app/src/main_live_ingest.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/app/src/streaming_data",
+            "envFile": "${workspaceFolder}/app/.env"
+        },
+                {
+            "name": "Python Debugger: Historical Ingest",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/app/src/main_historical_ingest.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/app/src/streaming_data",
+            "envFile": "${workspaceFolder}/app/.env"
+        },
+        {
             "name": "Python Debugger: Current File",
             "type": "debugpy",
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}/app/src/streaming_data",
-            "envFile": "${workspaceFolder}/app/src/.env"
+            "envFile": "${workspaceFolder}/app/.env"
         },
         {
             "name": "Python Debugger: Module",
@@ -19,7 +37,7 @@
             "request": "launch",
             "module": "streaming_data.test",
             "cwd": "${workspaceFolder}/app/src/streaming_data",
-            "envFile": "${workspaceFolder}/app/src/.env"
+            "envFile": "${workspaceFolder}/app/.env"
         }
     ]
 }

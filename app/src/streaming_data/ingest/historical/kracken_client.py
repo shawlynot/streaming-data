@@ -1,27 +1,60 @@
-import json
-import websockets
+from datetime import date, datetime, timezone
+import logging
+from typing import NamedTuple
+from ...db import DB_CLIENT
+import requests
 
-KRAKEN_WS_URL = "wss://ws.kraken.com/v2"  # v2 public market data
+KRAKEN_REST_URL = "https://api.kraken.com/0/public/OHLC"  # v2 public market data
+
+logger = logging.getLogger(__name__)
+
+class KarackenCandle(NamedTuple):
+    d: date
+    open: float
+    close: float
 
 
-async def kraken_ws_client():
-    async with websockets.connect(KRAKEN_WS_URL) as ws:
+class KrakenOHLCClient:
 
-        # Subscribe to ticker data
-        subscribe_msg = {
-            "method": "subscribe",
-            "params": {
-                "channel": "ticker",
-                "symbol": ["BTC/USD"],  # you can add more pairs
-            },
-        }
+    def get_year(self):
+        params = {"pair": "BTCUSD", "interval": 1440}
 
-        await ws.send(json.dumps(subscribe_msg))
-        print("Subscribed to BTC/USD ticker")
+        # get since
+        with DB_CLIENT.connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT EXTRACT(EPOCH FROM MAX(_date)) FROM ingested.historical_kraken
+                    """
+                )
+                since_row = cur.fetchone()
+                if since_row is not None and since_row[0] is not None:
+                    params["since"] = int(since_row[0]) + 60 * 60 * 24  # add one day in seconds
 
-        # Receive messages indefinitely
-        while True:
-            msg = await ws.recv()
-            data = json.loads(msg)
-            print(data)
-            # TODO: stick it in a DB
+        logger.info("Fetching OHLC data since %s", params)
+        r = requests.get(KRAKEN_REST_URL, params=params,
+                         timeout=10, headers={})
+        r.raise_for_status()
+        data = r.json()
+        result = data.get("result", {})
+
+        # The 'result' dict contains the pair key and possibly a 'last' id.
+        # Find the first key that is not 'last'
+        pair_keys = [k for k in result.keys() if k != "last"]
+        if not pair_keys:
+            raise RuntimeError("No OHLC data returned for pair.")
+        data_key = pair_keys[0]
+        rows = result[data_key]  # list of lists
+
+        data = [KarackenCandle(datetime.fromtimestamp(
+            r[0], timezone.utc).date(), r[1], r[4]) for i, r in enumerate(rows) if i < len(rows) - 1]
+
+        with DB_CLIENT.connection() as conn:
+            with conn.cursor() as cur:
+                cur.executemany(
+                    """
+                    INSERT INTO ingested.historical_kraken (_date, open, close)
+                    VALUES (%s, %s, %s)
+                    """,
+                    data
+                )
