@@ -2,7 +2,6 @@
 name = "streaming-data"
 version = "0.1.0"
 description = "Add your description here"
-readme = "README.md"
 authors = [
     { name = "shawlynot", email = "88781957+shawlynot@users.noreply.github.com" }
 ]
@@ -11,6 +10,7 @@ dependencies = [
     "websockets",
     "psycopg[binary,pool]",
     "requests",
+    "massive"
 ]
 
 [dependency-groups]

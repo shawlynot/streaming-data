@@ -1,0 +1,2 @@
+DROP SCHEMA ingested CASCADE;
+DROP SCHEMA security_master CASCADE;

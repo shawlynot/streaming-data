@@ -1,5 +1,7 @@
 ## TODO
 
-1. Ingest Kracken data into Postgres. Live for spot, historical for volatility ✅.
-2. Estimate volatility using GARCH(1).
-3. Plug in numbers into quantlib (or similar) to calculate option price based on live spot and historical vol
+1. Read historical american option and historical spot from Massive
+    1. Do I need ref data? Yes
+2. Calculate implied vols using a binomial tree method
+3. Profile and optimise. Maybe some c++ extensions in Python
+4. Get a job
