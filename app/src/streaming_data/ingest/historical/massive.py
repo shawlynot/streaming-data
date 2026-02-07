@@ -1,13 +1,12 @@
-from datetime import date, datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 import logging
 import os
+from time import sleep
 from massive import RESTClient
-from streaming_data.db.util import DB_CLIENT
+from ...db.util import DB_CLIENT
 
 
 logger = logging.getLogger(__name__)
-
-# NVDA260306C00180000
 
 
 class MassiveClient:
@@ -24,23 +23,104 @@ class MassiveClient:
             1,
             "day",
             today - timedelta(days=30),
-            today.isoformat(),
+            today,
             sort="desc",
             limit=5000
         )
 
         with DB_CLIENT.connection() as conn:
-            with conn.cursor() as cur:
+            with conn.cursor() as cur, conn.transaction():
                 cur.executemany(
                     """
                     INSERT INTO ingested.spot_massive 
                      (open, close, _date)
-                    VALUES (%s, %s, %s)
+                    VALUES (%(open)s, %(close)s, %(date)s)
+                    ON CONFLICT (_date) DO NOTHING
                     """,
-                    [(
-                        s.open,
-                        s.close,
-                        datetime.fromtimestamp(
+                    [{
+                        'open': s.open,
+                        'close': s.close,
+                        'date': datetime.fromtimestamp(
                             s.timestamp / 1000, tz=timezone.utc).date(),
-                    ) for s in spot]
+                    } for s in spot]
                 )
+
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT close
+                    FROM ingested.spot_massive
+                    ORDER BY _date DESC
+                    LIMIT 1
+                    """)
+                fetch_close = cur.fetchone()[0]
+                # round to nearest 10
+                lastest_close = int(round(fetch_close, -1))
+
+            options = self.client.list_options_contracts(
+                underlying_ticker="NVDA",
+                strike_price=lastest_close,
+                order="asc",
+                limit=10,
+                sort="ticker",
+                expiration_date_lte=today + timedelta(days=30),
+            )
+
+            american_options = [
+                o for o in options if o.exercise_style == "american"]
+
+            with conn.cursor() as cur, conn.transaction():
+                cur.executemany(
+                    """
+                        INSERT INTO security_master.options
+                        (ticker, contract_type, exercise_style, strike_price, expiration_date, shares_per_contract)
+                        VALUES (%(ticker)s, %(contract_type)s, %(exercise_style)s, %(strike_price)s, %(expiration_date)s, %(shares_per_contract)s)
+                        ON CONFLICT (ticker) DO NOTHING
+                        """,
+                    [{
+                        'ticker': s.ticker,
+                        'contract_type': s.contract_type,
+                        'exercise_style': s.exercise_style,
+                        'strike_price': s.strike_price,
+                        'expiration_date': s.expiration_date,
+                        'shares_per_contract': s.shares_per_contract,
+                    } for s in american_options]
+                )
+
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT ticker
+                    FROM security_master.options
+                    """)
+                fetch_tickers = cur.fetchall()
+                tickers: list[str] = [f[0] for f in fetch_tickers]
+
+            for ticker in tickers:
+                sleep(15)  # to avoid hitting rate limits
+                logger.info(f"Getting data for {ticker}")
+                option_aggs = self.client.list_aggs(
+                    ticker,
+                    1,
+                    "day",
+                    today - timedelta(days=30),
+                    today,
+                    sort="asc",
+                )
+
+                with conn.cursor() as cur, conn.transaction():
+                    cur.executemany(
+                        """
+                        INSERT INTO ingested.option_massive 
+                        (ticker, open, close, _date)
+                        VALUES (%(ticker)s, %(open)s, %(close)s, %(date)s)
+                        ON CONFLICT DO NOTHING
+                        """,
+                        [{
+                            'open': a.open,
+                            'close': a.close,
+                            'date': datetime.fromtimestamp(
+                                a.timestamp / 1000, tz=timezone.utc).date(),
+                            'ticker': ticker,
+                        } for a in option_aggs]
+                    )

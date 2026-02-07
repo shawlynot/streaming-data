@@ -1,3 +1,4 @@
+from datetime import date
 import logging
 from streaming_data.ingest.historical.massive import MassiveClient
 

@@ -10,7 +10,8 @@ dependencies = [
     "websockets",
     "psycopg[binary,pool]",
     "requests",
-    "massive"
+    "massive",
+    "scipy"
 ]
 
 [dependency-groups]
