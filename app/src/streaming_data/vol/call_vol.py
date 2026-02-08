@@ -37,7 +37,8 @@ def get_vol_call():
             result = cur.fetchall()
 
         df = pl.DataFrame(result, schema={
-                          'spot': pl.Float64, 'option_price': pl.Float64, 'strike_price': pl.Float64, 'expiration_date': pl.Date, 'as_of_date': pl.Date})
+                          'spot': pl.Float64, 'option_price': pl.Float64, 'strike_price': pl.Float64, 'expiration_date': pl.Date, 'as_of_date': pl.Date},
+                          orient="row")
 
     df = df.with_columns(
         time_to_expiry_years=(pl.col("expiration_date") - pl.col("as_of_date")).dt.total_days() / 365
