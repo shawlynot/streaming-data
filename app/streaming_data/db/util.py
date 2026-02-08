@@ -1,20 +1,19 @@
 import os
-from psycopg_pool import ConnectionPool
+
+import psycopg
 
 
 class DBClient:
 
-    pool: ConnectionPool
+    password: str
 
     def __init__(self, password: str):
-        self.pool = ConnectionPool(
-            conninfo=f"postgresql://admin:{password}@localhost:5432/streaming_data",
-            min_size=1,
-            max_size=2,
-        )
+        self.password = password
 
     def connection(self):
-        return self.pool.connection()
+        return psycopg.connect(
+            conninfo=f"postgresql://admin:{self.password}@localhost:5432/streaming_data"
+        )
 
 
 DB_CLIENT = DBClient(password=os.environ["POSTGRES_PASSWORD"])

@@ -8,18 +8,18 @@
             "name": "Ingest",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/app/src/main_ingest.py",
+            "program": "${workspaceFolder}/app/main_ingest.py",
             "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}/app/src/streaming_data",
+            "cwd": "${workspaceFolder}/app/streaming_data",
             "envFile": "${workspaceFolder}/app/.env"
         },
         {
             "name": "Vol",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/app/src/main_vol.py",
+            "program": "${workspaceFolder}/app/main_vol.py",
             "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}/app/src/streaming_data",
+            "cwd": "${workspaceFolder}/app/streaming_data",
             "envFile": "${workspaceFolder}/app/.env"
         }
     ]

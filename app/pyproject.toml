@@ -11,7 +11,8 @@ dependencies = [
     "psycopg[binary]",
     "requests",
     "massive",
-    "scipy"
+    "scipy",
+    "polars",
 ]
 
 [dependency-groups]

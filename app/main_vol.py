@@ -1,9 +1,8 @@
 from datetime import date
 import logging
-from streaming_data.vol.binomical_vol import get_vol_call
+from streaming_data.vol.call_vol import get_vol_call
 
 logger = logging.basicConfig(level=logging.INFO)
 
 if __name__ == "__main__":
-        get_vol_call(date.fromisoformat("2026-02-05"))
-
+    get_vol_call()
