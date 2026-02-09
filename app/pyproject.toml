@@ -13,6 +13,7 @@ dependencies = [
     "massive",
     "scipy",
     "polars",
+    "pybind11",
 ]
 
 [dependency-groups]
@@ -22,3 +23,7 @@ dev = [
     "flake8",
     "mypy",
 ]
+
+[build-system]
+requires = ["pybind11", "scikit-build-core>=0.11"]
+build-backend = "scikit_build_core.build"
