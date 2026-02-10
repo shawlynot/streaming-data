@@ -1,12 +1,11 @@
 from datetime import date
-from math import exp, log, sqrt
 from typing import NamedTuple
 from ..db.util import DB_CLIENT
-from scipy.stats import norm
 from scipy.optimize import newton
 import polars as pl
+from _core import bs_eur_call_price, bs_vega
 
-risk_free_rate = 0.035
+risk_free_rate = 0.035 # get from SOFR?
 
 
 class SpotOptionStrikeExpiry(NamedTuple):
@@ -20,7 +19,7 @@ class SpotOptionStrikeExpiry(NamedTuple):
 def get_vol_call():
     # get spot for the day
     # get an option price for that day
-    # get the expiry date, strike and time to expiry of the that option, option type for that expiry.
+    # get the expiry date, strike and time to expiry of WWthe that option, option type for that expiry.
     # assume no dividends, so calulate vol using European option formula
 
     sql = """
@@ -62,28 +61,11 @@ def _newton(row: dict) -> float:
         return None
 
 
-def _get_bs_eur_call_price(spot, strike_price, time_to_expiry_years, vol):
-    d1 = (log(spot / strike_price) + (risk_free_rate + 0.5 * vol ** 2)
-          * time_to_expiry_years) / (vol * sqrt(time_to_expiry_years))
-    d2 = d1 - vol * sqrt(time_to_expiry_years)
-
-    call_price = spot * norm.cdf(d1) - strike_price * \
-        exp(-risk_free_rate * time_to_expiry_years) * norm.cdf(d2)
-    return call_price
-
-
-def _get_bs_vega(spot, strike_price, time_to_expiry_years, vol):
-    d1 = (log(spot / strike_price) + (risk_free_rate + 0.5 * vol ** 2)
-          * time_to_expiry_years) / (vol * sqrt(time_to_expiry_years))
-    return spot * norm.pdf(d1) * sqrt(time_to_expiry_years)
-
-
 def _f(vol, spot, strike_price, time_to_expiry_years, option_price):
-    bs_price = _get_bs_eur_call_price(
-        spot, strike_price, time_to_expiry_years, vol)
+    bs_price = bs_eur_call_price(
+        spot, strike_price, time_to_expiry_years, risk_free_rate, vol)
     return bs_price - option_price
 
 
 def _f_prime(vol, spot, strike_price, time_to_expiry_years, _):
-    vega = _get_bs_vega(spot, strike_price, time_to_expiry_years, vol)
-    return vega
+    return bs_vega(spot, strike_price, time_to_expiry_years, risk_free_rate, vol)
