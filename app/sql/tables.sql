@@ -18,12 +18,12 @@ CREATE table if not exists ingested.option_massive (
     ticker VARCHAR(50) NOT NULL REFERENCES security_master.options(ticker), 
     open NUMERIC(10,2) NOT NULL,
     close NUMERIC(10,2) NOT NULL,
-    _date date NOT NULL,
-    UNIQUE (ticker, _date)
+    time timestamp NOT NULL,
+    UNIQUE (ticker, time)
 );
 
 CREATE TABLE IF NOT EXISTS ingested.spot_massive (
     open NUMERIC(10,2) NOT NULL,
     close NUMERIC(10,2) NOT NULL,
-    _date date NOT NULL UNIQUE
+    time timestamp NOT NULL UNIQUE
 );

@@ -21,11 +21,11 @@ class MassiveClient:
         spot = self.client.list_aggs(
             "NVDA",
             1,
-            "day",
+            "minute",
             today - timedelta(days=30),
             today,
             sort="desc",
-            limit=5000
+            limit=50000
         )
 
         with DB_CLIENT.connection() as conn:
@@ -33,15 +33,15 @@ class MassiveClient:
                 cur.executemany(
                     """
                     INSERT INTO ingested.spot_massive 
-                     (open, close, _date)
-                    VALUES (%(open)s, %(close)s, %(date)s)
-                    ON CONFLICT (_date) DO NOTHING
+                     (open, close, time)
+                    VALUES (%(open)s, %(close)s, %(time)s)
+                    ON CONFLICT DO NOTHING
                     """,
                     [{
                         'open': s.open,
                         'close': s.close,
-                        'date': datetime.fromtimestamp(
-                            s.timestamp / 1000, tz=timezone.utc).date(),
+                        'time': datetime.fromtimestamp(
+                            s.timestamp / 1000, tz=timezone.utc),
                     } for s in spot]
                 )
 
@@ -50,7 +50,7 @@ class MassiveClient:
                     """
                     SELECT close
                     FROM ingested.spot_massive
-                    ORDER BY _date DESC
+                    ORDER BY time DESC
                     LIMIT 1
                     """)
                 fetch_close = cur.fetchone()[0]
@@ -102,25 +102,26 @@ class MassiveClient:
                 option_aggs = self.client.list_aggs(
                     ticker,
                     1,
-                    "day",
+                    "minute",
                     today - timedelta(days=30),
                     today,
                     sort="asc",
+                    limit=50000
                 )
 
                 with conn.cursor() as cur, conn.transaction():
                     cur.executemany(
                         """
                         INSERT INTO ingested.option_massive 
-                        (ticker, open, close, _date)
-                        VALUES (%(ticker)s, %(open)s, %(close)s, %(date)s)
+                        (ticker, open, close, time)
+                        VALUES (%(ticker)s, %(open)s, %(close)s, %(time)s)
                         ON CONFLICT DO NOTHING
                         """,
                         [{
                             'open': a.open,
                             'close': a.close,
-                            'date': datetime.fromtimestamp(
-                                a.timestamp / 1000, tz=timezone.utc).date(),
+                            'time': datetime.fromtimestamp(
+                                a.timestamp / 1000, tz=timezone.utc),
                             'ticker': ticker,
                         } for a in option_aggs]
                     )

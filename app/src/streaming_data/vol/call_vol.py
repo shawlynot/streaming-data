@@ -23,11 +23,11 @@ def get_vol_call():
     # assume no dividends, so calulate vol using European option formula
 
     sql = """
-    SELECT sm."close" AS spot, om."close" AS option_price, o.strike_price, o.expiration_date, sm._date as as_of_date
+    SELECT sm."close" AS spot, om."close" AS option_price, o.strike_price, o.expiration_date, sm.time
     FROM ingested.spot_massive sm
-    INNER JOIN ingested.option_massive om ON om._date = sm._date 
+    INNER JOIN ingested.option_massive om ON om.time = sm.time 
     INNER JOIN security_master."options" o ON o.ticker = om.ticker AND o.contract_type = 'call'
-    ORDER BY sm._date DESC
+    ORDER BY sm.time ASC
     """
 
     with DB_CLIENT.connection() as conn:
@@ -36,7 +36,7 @@ def get_vol_call():
             result = cur.fetchall()
 
         df = pl.DataFrame(result, schema={
-                          'spot': pl.Float64, 'option_price': pl.Float64, 'strike_price': pl.Float64, 'expiration_date': pl.Date, 'as_of_date': pl.Date},
+                          'spot': pl.Float64, 'option_price': pl.Float64, 'strike_price': pl.Float64, 'expiration_date': pl.Date, 'as_of_date': pl.Datetime},
                           orient="row")
 
     df = df.with_columns(
