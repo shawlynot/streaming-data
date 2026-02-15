@@ -5,7 +5,7 @@ description = "Add your description here"
 authors = [
     { name = "shawlynot", email = "88781957+shawlynot@users.noreply.github.com" }
 ]
-requires-python = ">=3.14"
+requires-python = ">=3.14.3"
 dependencies = [
     "websockets",
     "psycopg[binary]",
@@ -22,6 +22,8 @@ dev = [
     "black",
     "flake8",
     "mypy",
+    "scalene",
+    "pydantic"
 ]
 
 [build-system]

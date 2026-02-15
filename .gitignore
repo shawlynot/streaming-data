@@ -172,3 +172,5 @@ cython_debug/
 .ansible
 .vscode
 */build/
+
+scalene-profile.*
