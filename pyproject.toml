@@ -22,7 +22,8 @@ dev = [
     "flake8",
     "mypy",
     "scalene",
-    "pydantic"
+    "pydantic",
+    "pybind11"
 ]
 
 [build-system]
