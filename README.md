@@ -2,12 +2,6 @@
 
 Just some experiments with Python and C++
 
-## Structure
-```
-/app # python and c++ with uv and sickit-build
-/infra # ansible scripts for deploying this on my Hetzner box (currently broken)
-```
-
 ## TODO
 
 1. Read historical american NVDA call options and historical spot from Massive ✅

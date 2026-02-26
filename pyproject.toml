@@ -13,7 +13,6 @@ dependencies = [
     "massive",
     "scipy",
     "polars",
-    "pybind11",
 ]
 
 [dependency-groups]
