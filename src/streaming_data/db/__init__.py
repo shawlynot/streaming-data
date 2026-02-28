@@ -1,5 +1,6 @@
-from .util import DB_CLIENT
+from .util import get_db_client, DBClient
 
 __all__ = [
-    "DB_CLIENT"
+    "get_db_client",
+    "DBClient"
 ]

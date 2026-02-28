@@ -1,7 +1,11 @@
 import logging
-from streaming_data.ingest.historical.massive import MassiveClient
+from streaming_data.ingest.historical.massive import MassiveHistorical
 
-logger = logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
 
 if __name__ == "__main__":
-    MassiveClient().get_data()
+    MassiveHistorical().ingest_nvda()

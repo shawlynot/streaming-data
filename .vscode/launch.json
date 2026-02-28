@@ -8,10 +8,10 @@
             "name": "Ingest",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/app/src/main_ingest.py",
+            "program": "${workspaceFolder}/src/main_ingest.py",
             "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}/app/src",
-            "envFile": "${workspaceFolder}/app/.env"
+            "cwd": "${workspaceFolder}/src",
+            "envFile": "${workspaceFolder}/.env"
         },
         {
             "name": "Vol",
@@ -20,11 +20,11 @@
             "module": "scalene",
             "args": [
                 "run",
-                "${workspaceFolder}/app/src/main_vol.py"
+                "${workspaceFolder}/src/main_vol.py"
             ],
             "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}/app/src",
-            "envFile": "${workspaceFolder}/app/.env"
+            "cwd": "${workspaceFolder}/src",
+            "envFile": "${workspaceFolder}/.env"
         }
     ]
 }

@@ -1,6 +1,6 @@
 #include <cmath>
 #include <pybind11/pybind11.h>
-#include "_core.h"
+#include <_core.h>
 #include <boost/math/distributions/normal.hpp>
 
 const boost::math::normal standard_normal;
