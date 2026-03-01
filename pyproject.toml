@@ -13,7 +13,8 @@ dependencies = [
     "massive",
     "scipy",
     "polars",
-    "boto3"
+    "boto3",
+    "pyarrow"
 ]
 
 [dependency-groups]

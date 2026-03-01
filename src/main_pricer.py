@@ -4,14 +4,14 @@ from datetime import datetime
 
 from streaming_data.db import get_db_client
 from streaming_data.model import Tick
-from streaming_data.pricing.binomial_pricer import BinomialPricer
+from streaming_data.pricing.implied_vol import ImpliedVolCalculator
 
 logger = logging.getLogger(__name__)
 
 
 def replay_ticks(start: datetime):
     db = get_db_client()
-    pricer = BinomialPricer()
+    pricer = ImpliedVolCalculator()
 
     with db.connection() as conn:
         with conn.cursor(name="tick_cursor") as cur:
