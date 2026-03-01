@@ -14,6 +14,16 @@
             "envFile": "${workspaceFolder}/.env"
         },
         {
+            "name": "Price",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/main_pricer.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/src",
+            "envFile": "${workspaceFolder}/.env",
+            "args": ["2025-10-01"]
+        },
+        {
             "name": "Vol",
             "type": "debugpy",
             "request": "launch",

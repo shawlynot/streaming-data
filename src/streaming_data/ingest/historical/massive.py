@@ -28,6 +28,7 @@ class MassiveHistorical:
     client: RESTClient
     db_client: DBClient
     s3: Any
+    exchange_to_ven_id: dict[str, int]
 
     def __init__(self):
         token = os.environ["MASSIVE_API_KEY"]
@@ -42,11 +43,40 @@ class MassiveHistorical:
             endpoint_url='https://files.massive.com',
             config=Config(signature_version='s3v4')
         )
+        self.exchange_to_ven_id = {}
 
     def ingest_nvda(self):
         today = datetime.now(timezone.utc).date()
         self._get_ref_data(today, today + timedelta(days=180))
         self._get_market_data(today - timedelta(days=180), today)
+
+    def _get_venue_id(self, name: str) -> int:
+        if name not in self.exchange_to_ven_id:
+            with self.db_client.connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute("""
+                    SELECT id FROM security_master.venue WHERE name = %s
+                    """, (name,))
+                    row = cur.fetchone()
+                if row:
+                    self.exchange_to_ven_id[name] = cast(int, row[0])
+                else:
+                    with conn.cursor() as cur:
+                        cur.execute(
+                        """
+                        INSERT INTO security_master.venue (name)
+                        VALUES (%s)
+                        ON CONFLICT DO NOTHING
+                        RETURNING id
+                        """,
+                        (name,)
+                        )
+                        row = cur.fetchone()
+                        assert row
+                        self.exchange_to_ven_id[name] = cast(int, row[0])
+        return self.exchange_to_ven_id[name]        
+        
+
 
     def _get_ref_data(self, today: date, six_months: date):
         # 1) Get NVDA ref data and store as an equity asset
@@ -57,10 +87,13 @@ class MassiveHistorical:
             with conn.cursor() as cur:
                 cur.execute(
                     """
-                    INSERT INTO security_master.asset (ticker, instrument_type)
-                    VALUES  ('NVDA', 'equity')
+                    INSERT INTO security_master.asset (ticker, venue, instrument_type)
+                    VALUES ('NVDA', %s, 'equity')
+                    ON CONFLICT (ticker, venue, instrument_type) DO UPDATE
+                        SET ticker = EXCLUDED.ticker
                     RETURNING id
-                    """
+                    """,
+                    (self._get_venue_id(cast(str, details.primary_exchange)),)
                 )
                 row = cur.fetchone()
                 assert row is not None
@@ -68,8 +101,9 @@ class MassiveHistorical:
 
                 cur.execute(
                     """
-                    INSERT INTO security_master.equities (security_id, ticker)
-                    VALUES (%s, 'NVDA')
+                    INSERT INTO security_master.equities (security_id)
+                    VALUES (%s)
+                    ON CONFLICT DO NOTHING
                     """,
                     (equity_id,),
                 )
@@ -97,11 +131,13 @@ class MassiveHistorical:
                 for contract in contracts:
                     cur.execute(
                         """
-                        INSERT INTO security_master.asset (ticker, instrument_type)
-                        VALUES (%s, %s)
+                        INSERT INTO security_master.asset (ticker, venue, instrument_type)
+                        VALUES (%s, %s, %s)
+                        ON CONFLICT (ticker, venue, instrument_type) DO UPDATE
+                            SET ticker = EXCLUDED.ticker
                         RETURNING id
                         """,
-                        (contract.ticker, "option"),
+                        (contract.ticker, self._get_venue_id(cast(str, contract.primary_exchange)), "option"),
                     )
                     row = cur.fetchone()
                     assert row is not None
@@ -110,13 +146,13 @@ class MassiveHistorical:
                     cur.execute(
                         """
                         INSERT INTO security_master.options
-                            (security_id, ticker, contract_type, exercise_style,
+                            (security_id, contract_type, exercise_style,
                              strike_price, expiration_date, shares_per_contract)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s)
+                        VALUES (%s, %s, %s, %s, %s, %s)
+                        ON CONFLICT DO NOTHING
                         """,
                         (
                             option_id,
-                            contract.ticker,
                             contract.contract_type,
                             contract.exercise_style,
                             contract.strike_price,
@@ -137,8 +173,7 @@ class MassiveHistorical:
     def _download_and_store(self, asset: str, s3_prefix: str, start: date, end: date):
         with self.db_client.connection() as conn:
             with conn.cursor() as cur:
-                cur.execute(
-                    f"SELECT id, ticker FROM security_master.asset WHERE instrument_type = '{asset}'")
+                cur.execute(f"SELECT id, ticker FROM security_master.asset WHERE instrument_type = '{asset}'") # type: ignore
                 rows = cur.fetchall()
 
         ticker_to_id: dict[str, int] = {ticker: sid for sid, ticker in rows}
