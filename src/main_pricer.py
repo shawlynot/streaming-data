@@ -3,7 +3,8 @@ import logging
 from datetime import datetime
 
 from streaming_data.db import get_db_client
-from streaming_data.model import Tick
+from streaming_data.market_data.market_data import MarketDataHandler
+from streaming_data.model import TickEvent
 from streaming_data.pricing.implied_vol import ImpliedVolCalculator
 
 logger = logging.getLogger(__name__)
@@ -11,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 def replay_ticks(start: datetime):
     db = get_db_client()
+    market_data = MarketDataHandler()
     pricer = ImpliedVolCalculator()
 
     with db.connection() as conn:
@@ -26,14 +28,10 @@ def replay_ticks(start: datetime):
                 """,
                 (start,),
             )
-            count = 0
             for security_id, price, time in cur:
-                pricer.on_tick(Tick(security_id, price, time))
-                count += 1
-                if count % 10000 == 0:
-                    logger.info("Processed %d ticks", count)
-
-    logger.info("Replay complete: %d ticks", count)
+                market_data_event = market_data.on_tick(TickEvent(security_id, price, time))
+                if market_data_event:
+                    pricer.on_tick(market_data_event)
 
 
 if __name__ == "__main__":

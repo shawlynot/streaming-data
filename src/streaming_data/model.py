@@ -3,12 +3,13 @@ from decimal import Decimal
 from typing import NamedTuple
 
 
-class Tick(NamedTuple):
+class TickEvent(NamedTuple):
     security_id: int
     price: Decimal
     time: datetime
 
-class TickConsumer:
-
-    def on_tick(self, tick: Tick):
-        raise NotImplementedError
+class MarketDataEvent(NamedTuple):
+    option_sec_id: int
+    option_price: Decimal
+    underlier_price: Decimal
+    time: datetime

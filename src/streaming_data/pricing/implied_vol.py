@@ -6,14 +6,14 @@ from typing import cast
 import polars as pl
 
 from ..db.util import get_db_client
-from ..model import Tick, TickConsumer
+from ..model import MarketDataEvent
 from scipy.optimize import newton
 from _core import bs_eur_call_price, bs_vega
 
 
 logger = logging.getLogger(__name__)
 
-class ImpliedVolCalculator(TickConsumer):
+class ImpliedVolCalculator:
 
     sec_id_is_call: dict[int, bool]
     calls_ref_data: pl.DataFrame
@@ -64,26 +64,25 @@ class ImpliedVolCalculator(TickConsumer):
                 self.risk_free_rate = row[0]
         logger.info("Using SOFR risk-free rate: %.4f", self.risk_free_rate)
     
-    def on_tick(self, tick: Tick):
+    def on_tick(self, tick: MarketDataEvent):
 
         #TODO handle spot ticks: store last value as a field and use below
 
-        if self.sec_id_is_call.get(tick.security_id):
-            row = self.calls_ref_data.row(by_predicate=pl.col("security_id") == tick.security_id)
+        if self.sec_id_is_call.get(tick.option_sec_id):
+            row = self.calls_ref_data.row(by_predicate=pl.col("security_id") == tick.option_sec_id)
             strike_price = row[1]
             time_to_expiry_years = row[2]
-            spot_price = 0 # TODO make this event handler handle
-            implied_vol = self._newton(spot_price, strike_price, time_to_expiry_years, tick.price)
+            implied_vol = self._newton(tick.underlier_price, strike_price, time_to_expiry_years, tick.option_price)
             logger.info("Implied vol %s", implied_vol)
 
 
-    def _newton(self, spot: float, strike: pl.Float64, time_to_expiry_years: pl.Float64, option_price: Decimal) -> float | None:
+    def _newton(self, underlyer: Decimal, strike: pl.Float64, time_to_expiry_years: pl.Float64, option_price: Decimal) -> float | None:
         try:
             return cast(int, newton(
                 func=self._f,
                 x0=0.2,  # initial guess for vol
                 fprime=self._f_prime,
-                args=(float(spot), float(strike), float(time_to_expiry_years), float(option_price)), # type: ignore
+                args=(float(underlyer), float(strike), float(time_to_expiry_years), float(option_price)), # type: ignore
                 tol=0.01,
                 maxiter=1000
             ))

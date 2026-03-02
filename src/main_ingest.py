@@ -1,6 +1,6 @@
 import logging
-from streaming_data.ingest.historical.massive import MassiveHistorical
-from streaming_data.ingest.rates.fed import FedRates
+from streaming_data.ingest import MassiveHistorical
+from streaming_data.ingest import FedRates
 
 logging.basicConfig(
     level=logging.INFO,
