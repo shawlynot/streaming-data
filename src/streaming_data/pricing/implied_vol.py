@@ -13,6 +13,8 @@ from _core import bs_eur_call_price, bs_vega
 
 logger = logging.getLogger(__name__)
 
+_nanos_in_year = 365 * 24 * 60 * 60 * 1_000_000_000
+
 class ImpliedVolCalculator:
 
     sec_id_is_call: dict[int, bool]
@@ -21,7 +23,6 @@ class ImpliedVolCalculator:
 
     def __init__(self):
         db = get_db_client()
-        today = datetime.now(timezone.utc).date()
         with db.connection() as conn:
             with conn.cursor() as cur:
                 cur.execute(
@@ -33,19 +34,15 @@ class ImpliedVolCalculator:
             with conn.cursor() as cur:
                 cur.execute(
                     """
-                    SELECT security_id, strike_price, expiration_date
+                    SELECT security_id, strike_price, EXTRACT(EPOCH FROM (expiration_date + TIME '18:00') AT TIME ZONE 'US/Eastern') * 1000000000
                     FROM security_master.options
                     WHERE contract_type = 'call'
                     """
                 )
                 self.calls_ref_data = pl.DataFrame(
                     cur.fetchall(),
-                    schema={"security_id": pl.Int64, "strike_price": pl.Float64, "expiration_date": pl.Date},
+                    schema={"security_id": pl.Int64, "strike_price": pl.Float64, "expiration_date": pl.Int64},
                     orient="row",
-                ).with_columns(
-                    time_to_expiry_years=(pl.col("expiration_date") - today).dt.total_days() / 365
-                ).drop(
-                    "expiration_date"
                 )
             with conn.cursor() as cur:
                 cur.execute(
@@ -71,18 +68,19 @@ class ImpliedVolCalculator:
         if self.sec_id_is_call.get(tick.option_sec_id):
             row = self.calls_ref_data.row(by_predicate=pl.col("security_id") == tick.option_sec_id)
             strike_price = row[1]
-            time_to_expiry_years = row[2]
-            implied_vol = self._newton(tick.underlier_price, strike_price, time_to_expiry_years, tick.option_price)
+            expiration_date: int = row[2]
+            years_to_expiry = (expiration_date - tick.time_nanos)/_nanos_in_year
+            implied_vol = self._newton(tick.underlier_price, strike_price, years_to_expiry, tick.option_price)
             logger.info("Implied vol %s", implied_vol)
 
 
-    def _newton(self, underlyer: Decimal, strike: pl.Float64, time_to_expiry_years: pl.Float64, option_price: Decimal) -> float | None:
+    def _newton(self, underlyer: Decimal, strike: pl.Float64, time_to_expiry_years: float, option_price: Decimal) -> float | None:
         try:
             return cast(int, newton(
                 func=self._f,
                 x0=0.2,  # initial guess for vol
                 fprime=self._f_prime,
-                args=(float(underlyer), float(strike), float(time_to_expiry_years), float(option_price)), # type: ignore
+                args=(float(underlyer), float(strike), time_to_expiry_years, float(option_price)), # type: ignore
                 tol=0.01,
                 maxiter=1000
             ))

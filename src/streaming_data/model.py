@@ -6,10 +6,10 @@ from typing import NamedTuple
 class TickEvent(NamedTuple):
     security_id: int
     price: Decimal
-    time: datetime
+    time_nanos: int
 
 class MarketDataEvent(NamedTuple):
     option_sec_id: int
     option_price: Decimal
     underlier_price: Decimal
-    time: datetime
+    time_nanos: int
