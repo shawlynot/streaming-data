@@ -1,14 +1,42 @@
+from decimal import Decimal
+
 from streaming_data.model import MarketDataEvent, TickEvent
+from streaming_data.db import get_db_client
+from _core import MarketDataState
+
 
 class MarketDataHandler:
-    
+
+    _state: MarketDataState
+    _option_ids: set[int]
+
+    def __init__(self):
+        db = get_db_client()
+        with db.connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT security_id, underlier_id
+                    FROM security_master.options
+                    """
+                )
+                option_id_to_underlier_id: dict[int, int] = {
+                    row[0]: row[1] for row in cur.fetchall()
+                }
+        self._option_ids = set(option_id_to_underlier_id.keys())
+        self._state = MarketDataState(option_id_to_underlier_id)
+
     def on_tick(self, tick: TickEvent) -> MarketDataEvent | None:
-        # maintain market state in python, then move to C++ std::map and use arrow as an interchange?
-        # current state
-        # 1) underlyer price stored in a red black tree sorted by time
-        # 2) redblack trees for each option tree
-        # Events:
-        # 1) underlyer tick: add to tree. Check for any matches in option trees. If match (closest option tick within 5 mins?), emit event?
-        # 2) option tick: add to tree. Check for matches in underlyer tree. If match (closest market tick within 5 mins?)
-        # 
-        pass
+        if tick.security_id in self._option_ids:
+            core = self._state.option_tick(tick.security_id, int(tick.price * 100), tick.time_nanos)
+            if core is None:
+                return None
+            return MarketDataEvent(
+                option_sec_id=core.option_sec_id,
+                option_price=Decimal(core.option_price) / 100,
+                underlier_price=Decimal(core.underlier_price) / 100,
+                time_nanos=core.time_nanos,
+            )
+        else:
+            self._state.underlier_tick(tick.security_id, int(tick.price * 100))
+            return None

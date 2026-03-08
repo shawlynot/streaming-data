@@ -23,18 +23,5 @@
             "envFile": "${workspaceFolder}/.env",
             "args": ["2025-10-01"]
         },
-        {
-            "name": "Vol",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "scalene",
-            "args": [
-                "run",
-                "${workspaceFolder}/src/main_vol.py"
-            ],
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}/src",
-            "envFile": "${workspaceFolder}/.env"
-        }
     ]
 }

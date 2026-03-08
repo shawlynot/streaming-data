@@ -146,13 +146,14 @@ class MassiveHistorical:
                     cur.execute(
                         """
                         INSERT INTO security_master.options
-                            (security_id, contract_type, exercise_style,
+                            (security_id, underlier_id, contract_type, exercise_style,
                              strike_price, expiration_date, shares_per_contract)
-                        VALUES (%s, %s, %s, %s, %s, %s)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)
                         ON CONFLICT DO NOTHING
                         """,
                         (
                             option_id,
+                            equity_id,
                             contract.contract_type,
                             contract.exercise_style,
                             contract.strike_price,

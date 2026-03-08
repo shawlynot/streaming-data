@@ -16,13 +16,12 @@ def replay_ticks(start: datetime):
     pricer = ImpliedVolCalculator()
 
     with db.connection() as conn:
-        with conn.cursor(name="tick_cursor") as cur:
-            cur.itersize = 5000
+        with conn.cursor() as cur:
             cur.execute(
                 """
-                SELECT m.security_id, m.price, m.time
+                SELECT m.security_id, m.price, (EXTRACT(EPOCH FROM m.time) * 1_000_000_000)::bigint AS time_nanos
                 FROM market_data.massive m
-                    JOIN security_master.asset a ON m.security_id = a.id AND a.instrument_type = 'option'
+                    JOIN security_master.asset a ON m.security_id = a.id
                 WHERE time >= %s 
                 ORDER BY time
                 """,

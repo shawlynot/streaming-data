@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS security_master.asset (
 
 CREATE TABLE IF NOT EXISTS security_master.options (
     security_id BIGINT PRIMARY KEY REFERENCES security_master.asset(id),
+    underlier_id BIGINT REFERENCES security_master.asset(id),
     contract_type security_master.contract_type NOT NULL,
     exercise_style security_master.exercise_style NOT NULL,
     strike_price NUMERIC(10,2) NOT NULL,
