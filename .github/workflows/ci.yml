@@ -18,6 +18,9 @@ jobs:
 
       - uses: astral-sh/setup-uv@v5
 
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y libboost-dev
+
       - name: Install dependencies
         run: uv sync --locked
 
