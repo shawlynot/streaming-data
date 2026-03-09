@@ -8,5 +8,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends g++ cmake && rm
 
 COPY pyproject.toml uv.lock ./
 COPY CMakeLists.txt ./
-RUN uv sync --locked
 ENV PATH="/app/.venv/bin:$PATH"
+COPY src/ ./src/
+RUN uv sync --locked
