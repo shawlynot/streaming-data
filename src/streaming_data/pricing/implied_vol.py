@@ -61,7 +61,7 @@ class ImpliedVolCalculator:
                 self.risk_free_rate = row[0]
         logger.info("Using SOFR risk-free rate: %.4f", self.risk_free_rate)
     
-    def on_tick(self, tick: MarketDataEvent):
+    def on_tick(self, tick: MarketDataEvent) -> float | None:
 
         #TODO handle spot ticks: store last value as a field and use below
 
@@ -72,6 +72,7 @@ class ImpliedVolCalculator:
             years_to_expiry = (expiration_date - tick.time_nanos)/_nanos_in_year
             implied_vol = self._newton(tick.underlier_price, strike_price, years_to_expiry, tick.option_price)
             logger.info("Implied vol %s", implied_vol)
+            return implied_vol
 
 
     def _newton(self, underlyer: Decimal, strike: pl.Float64, time_to_expiry_years: float, option_price: Decimal) -> float | None:

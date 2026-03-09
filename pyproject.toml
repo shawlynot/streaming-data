@@ -25,7 +25,8 @@ dev = [
     "mypy",
     "scalene",
     "pydantic",
-    "pybind11"
+    "pybind11",
+    "testcontainers[postgres]"
 ]
 
 [build-system]
