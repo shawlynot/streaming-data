@@ -4,11 +4,10 @@ LABEL org.opencontainers.image.source=https://github.com/shawlynot/streaming-dat
 
 WORKDIR /app
 
+RUN apt-get update && apt-get install -y --no-install-recommends g++ cmake && rm -rf /var/lib/apt/lists/*
+
 COPY pyproject.toml uv.lock ./
-RUN uv python install 3.14
-RUN uv sync --locked --no-install-project
+RUN uv sync --locked
 ENV PATH="/app/.venv/bin:$PATH"
 
 COPY src/ ./src/
-
-WORKDIR /app/src

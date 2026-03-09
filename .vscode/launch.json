@@ -4,6 +4,7 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
         {
             "name": "Ingest",
             "type": "debugpy",
@@ -22,6 +23,17 @@
             "cwd": "${workspaceFolder}/src",
             "envFile": "${workspaceFolder}/.env",
             "args": ["2025-10-01"]
+        },
+        {
+            "name": "Test",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "pytest",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "TESTCONTAINERS_RYUK_DISABLED": "true"
+            }
         },
     ]
 }

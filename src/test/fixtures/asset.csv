@@ -1,1 +1,4 @@
 id,ticker,venue,instrument_type
+1,SOFR,1,rate
+2,NVDA,2,equity
+70,O:NVDA260309C00185000,3,option

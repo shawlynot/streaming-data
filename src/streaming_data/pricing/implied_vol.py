@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from decimal import Decimal
 import logging
 from datetime import datetime, timezone
@@ -5,7 +7,7 @@ from typing import cast
 
 import polars as pl
 
-from ..db.util import get_db_client
+from ..db.util import get_db_client, DBClient
 from ..model import MarketDataEvent
 from scipy.optimize import newton
 from _core import bs_eur_call_price, bs_vega
@@ -21,8 +23,9 @@ class ImpliedVolCalculator:
     calls_ref_data: pl.DataFrame
     risk_free_rate: float
 
-    def __init__(self):
-        db = get_db_client()
+    def __init__(self, db: DBClient | None = None):
+        if db is None:
+            db = get_db_client()
         with db.connection() as conn:
             with conn.cursor() as cur:
                 cur.execute(
@@ -34,7 +37,7 @@ class ImpliedVolCalculator:
             with conn.cursor() as cur:
                 cur.execute(
                     """
-                    SELECT security_id, strike_price, EXTRACT(EPOCH FROM (expiration_date + TIME '18:00') AT TIME ZONE 'US/Eastern') * 1000000000
+                    SELECT security_id, strike_price, EXTRACT(EPOCH FROM (expiration_date + TIME '18:00') AT TIME ZONE 'America/New_York') * 1000000000
                     FROM security_master.options
                     WHERE contract_type = 'call'
                     """
@@ -61,18 +64,20 @@ class ImpliedVolCalculator:
                 self.risk_free_rate = row[0]
         logger.info("Using SOFR risk-free rate: %.4f", self.risk_free_rate)
     
-    def on_tick(self, tick: MarketDataEvent) -> float | None:
+    def on_tick(self, tick: MarketDataEvent) -> tuple[int, float] | None:
 
         #TODO handle spot ticks: store last value as a field and use below
 
-        if self.sec_id_is_call.get(tick.option_sec_id):
+        option_sec_id = tick.option_sec_id
+        if self.sec_id_is_call.get(option_sec_id):
             row = self.calls_ref_data.row(by_predicate=pl.col("security_id") == tick.option_sec_id)
             strike_price = row[1]
             expiration_date: int = row[2]
             years_to_expiry = (expiration_date - tick.time_nanos)/_nanos_in_year
             implied_vol = self._newton(tick.underlier_price, strike_price, years_to_expiry, tick.option_price)
             logger.info("Implied vol %s", implied_vol)
-            return implied_vol
+            if implied_vol is not None:
+                return option_sec_id, implied_vol
 
 
     def _newton(self, underlyer: Decimal, strike: pl.Float64, time_to_expiry_years: float, option_price: Decimal) -> float | None:

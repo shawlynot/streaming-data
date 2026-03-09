@@ -14,5 +14,8 @@ class DBClient:
 
 def get_db_client() -> DBClient:
     password = os.environ["POSTGRES_PASSWORD"]
-    conninfo = f"postgresql://admin:{password}@localhost:5432/streaming_data"
+    username = os.getenv("POSTGRES_USER", "admin")
+    host = os.getenv("POSTGRES_HOST", "localhost")
+    port = os.getenv("POSTGRES_PORT", "5432")
+    conninfo = f"postgresql://{username}:{password}@{host}:{port}/streaming_data"
     return DBClient(conninfo=conninfo)

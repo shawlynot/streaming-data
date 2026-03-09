@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 from decimal import Decimal
 
 from streaming_data.model import MarketDataEvent, TickEvent
 from streaming_data.db import get_db_client
+from streaming_data.db.util import DBClient
 from _core import MarketDataState
 
 
@@ -10,8 +13,9 @@ class MarketDataHandler:
     _state: MarketDataState
     _option_ids: set[int]
 
-    def __init__(self):
-        db = get_db_client()
+    def __init__(self, db: DBClient | None = None):
+        if db is None:
+            db = get_db_client()
         with db.connection() as conn:
             with conn.cursor() as cur:
                 cur.execute(
