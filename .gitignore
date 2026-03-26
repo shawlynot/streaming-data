@@ -172,6 +172,7 @@ cython_debug/
 .ansible
 .vscode
 */build/
+build_test/
 
 scalene-profile.*
 

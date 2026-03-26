@@ -9,3 +9,5 @@ Just some experiments with Python and C++
 3. Build Harness ✅
 4. Event driven: read data, solve for IV?
 5. Draw some graphs (yes obviously there's no alpha here)
+
+## CMake

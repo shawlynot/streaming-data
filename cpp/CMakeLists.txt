@@ -2,7 +2,7 @@ pybind11_add_module(_core MODULE
     _core.cpp
 )
 
-target_include_directories(_core PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include)
+target_link_libraries(_core PRIVATE core_impl)
 
 message("BUILDDIR='${CMAKE_CURRENT_BINARY_DIR}'")
 

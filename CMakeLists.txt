@@ -10,3 +10,8 @@ find_package(Boost REQUIRED)
 set(CMAKE_CXX_STANDARD 20 CACHE STRING "C++ version selection")
 
 add_subdirectory(cpp)
+
+option(BUILD_TESTS "Build C++ unit tests" OFF)
+if(BUILD_TESTS)
+    add_subdirectory(cpp/test)
+endif()
