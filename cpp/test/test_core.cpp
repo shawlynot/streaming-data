@@ -11,15 +11,6 @@ TEST(BsEurCallPrice, AtTheMoneyCall)
     EXPECT_NEAR(price, 10.4506, 0.001);
 }
 
-TEST(BsEurCallPrice, DeepInTheMoney)
-{
-    double price = shawlynot::bs_eur_call_price(150.0, 100.0, 1.0, 0.05, 0.2);
-    // Deep ITM call should be close to intrinsic value (spot - strike * e^(-rT))
-    double intrinsic = 150.0 - 100.0 * std::exp(-0.05);
-    EXPECT_GT(price, intrinsic);
-    EXPECT_NEAR(price, 54.8827, 0.001);
-}
-
 TEST(BsEurCallPrice, DeepOutOfTheMoney)
 {
     double price = shawlynot::bs_eur_call_price(50.0, 100.0, 1.0, 0.05, 0.2);

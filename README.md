@@ -10,4 +10,14 @@ Just some experiments with Python and C++
 4. Event driven: read data, solve for IV?
 5. Draw some graphs (yes obviously there's no alpha here)
 
-## CMake
+## build/install
+
+```sh
+uv sync --force-reinstall
+```
+
+## cpp tests
+
+```sh
+cmake -B build && cmake --build build && ctest --test-dir build
+```
