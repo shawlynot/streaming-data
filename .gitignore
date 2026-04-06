@@ -183,4 +183,3 @@ cmake_install.cmake
 Makefile
 
 .claude/
-_deps
