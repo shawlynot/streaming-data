@@ -13,13 +13,16 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      CC: clang
+      CXX: clang++
     steps:
       - uses: actions/checkout@v4
 
       - uses: astral-sh/setup-uv@v5
 
       - name: Install system dependencies
-        run: sudo apt-get update && sudo apt-get install -y libboost-dev
+        run: sudo apt-get update && sudo apt-get install -y libboost-dev clang
 
       - name: Install dependencies
         run: uv sync --locked

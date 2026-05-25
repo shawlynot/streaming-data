@@ -179,7 +179,10 @@ scalene-profile.*
 # CMake
 CMakeCache.txt
 CMakeFiles/
-cmake_install.cmake
+*.cmake
 Makefile
+_deps
 
+# Claude
 .claude/
+.mcp.json

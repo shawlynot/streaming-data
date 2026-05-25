@@ -4,7 +4,8 @@ LABEL org.opencontainers.image.source=https://github.com/shawlynot/streaming-dat
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y --no-install-recommends g++ cmake libboost-dev && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends clang cmake libboost-dev && rm -rf /var/lib/apt/lists/*
+ENV CC=clang CXX=clang++
 
 COPY pyproject.toml uv.lock ./
 COPY CMakeLists.txt ./
